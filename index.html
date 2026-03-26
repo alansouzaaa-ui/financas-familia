@@ -759,7 +759,82 @@ select.linp { cursor: pointer; }
 /* comp vs média */
 #r-comp { font-size: .7rem; color: var(--t3); line-height: 1.6; }
 
-/* ── SYNC STATUS ── */
+/* ── SCORE DE SAÚDE ── */
+.score-bar-wrap {
+  background: var(--s2); border-radius: var(--r-lg);
+  padding: 22px 24px; margin-bottom: 20px;
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
+}
+.score-left { display: flex; flex-direction: column; gap: 10px; }
+.score-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--t3); }
+.score-num {
+  font-family: var(--mono); font-size: 3rem; font-weight: 600;
+  line-height: 1; letter-spacing: -2px;
+}
+.score-label { font-size: .78rem; color: var(--t2); }
+.score-track {
+  height: 8px; background: var(--s3); border-radius: 8px; overflow: hidden;
+  margin-top: 4px;
+}
+.score-fill {
+  height: 100%; border-radius: 8px;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+.score-factors { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+.score-factor {
+  display: grid; grid-template-columns: 1fr auto 44px; gap: 8px;
+  align-items: center; font-size: .73rem;
+}
+.score-factor-label { color: var(--t2); }
+.score-factor-pts { font-family: var(--mono); font-size: .7rem; text-align: right; }
+.score-factor-bar { height: 3px; background: var(--s3); border-radius: 2px; overflow: hidden; }
+.score-factor-fill { height: 100%; border-radius: 2px; }
+
+/* ── PROJEÇÃO DO MÊS ── */
+.proj-card {
+  background: var(--s2); border-radius: var(--r-lg);
+  padding: 20px 24px; margin-bottom: 20px;
+}
+.proj-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.proj-title { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--t3); }
+.proj-mes { font-size: .75rem; color: var(--t2); font-family: var(--mono); }
+.proj-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.proj-item { }
+.proj-item-label { font-size: .65rem; color: var(--t3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.proj-item-val { font-family: var(--mono); font-size: 1rem; font-weight: 500; }
+.proj-item-sub { font-size: .68rem; color: var(--t3); margin-top: 3px; }
+.proj-progress { height: 3px; background: var(--s3); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+.proj-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+
+/* ── RESUMO NARRATIVO ── */
+.narrative-card {
+  background: var(--s2); border-radius: var(--r-lg);
+  padding: 18px 22px; margin-bottom: 20px;
+  border-left: 3px solid var(--accent);
+}
+.narrative-text { font-size: .88rem; color: var(--t1); line-height: 1.7; }
+.narrative-text strong { color: var(--accent); font-weight: 600; }
+.narrative-text .neg-hl { color: var(--red); font-weight: 600; }
+.narrative-text .warn-hl { color: var(--yellow); font-weight: 600; }
+
+/* ── RECORRENTES ── */
+.rec-card { background: var(--s2); border-radius: var(--r-lg); padding: 16px; }
+.rec-card h3 { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--t3); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.rec-row { display: grid; grid-template-columns: 20px 1fr 100px 24px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.03); font-size: .76rem; }
+.rec-row:last-child { border-bottom: none; }
+.rec-check { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(255,255,255,.15); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+.rec-check.on { background: rgba(52,211,153,.2); border-color: var(--accent); }
+.rec-check.on::after { content: '✓'; font-size: .6rem; color: var(--accent); }
+.rec-desc { color: var(--t1); }
+.rec-val { font-family: var(--mono); font-size: .73rem; color: var(--t2); text-align: right; }
+.rec-del { width: 20px; height: 20px; border-radius: 4px; border: none; background: transparent; color: var(--t3); cursor: pointer; font-size: .7rem; display: flex; align-items: center; justify-content: center; transition: color .15s; }
+.rec-del:hover { color: var(--red); }
+.rec-add { display: flex; gap: 8px; margin-top: 10px; }
+.rec-add input { flex: 1; background: var(--s3); border: 1px solid transparent; border-radius: var(--r-sm); padding: 6px 10px; color: var(--t1); font-family: var(--font); font-size: .76rem; outline: none; }
+.rec-add input:focus { border-color: rgba(52,211,153,.3); }
+.rec-add input::placeholder { color: var(--t3); }
+.rec-add-sec { background: var(--s3); border: 1px solid transparent; border-radius: var(--r-sm); padding: 6px 10px; color: var(--t1); font-family: var(--font); font-size: .76rem; outline: none; cursor: pointer; width: 100px; }
+.rec-add-sec:focus { border-color: rgba(52,211,153,.3); }
 .sync-pill {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 10px; border-radius: 20px;
@@ -996,8 +1071,13 @@ CREATE TABLE financas_metas (
           <div class="page-title">Visão Geral</div>
           <div class="page-sub">Histórico completo · Jul/2021 — Mar/2026</div>
         </div>
+        <!-- SCORE + NARRATIVA (topo) -->
+        <div id="score-wrap"></div>
+        <div id="narrative-wrap"></div>
         <div id="alertas-box"></div>
         <div class="kpi-row" id="kpi-v"></div>
+        <!-- PROJEÇÃO DO MÊS ATUAL -->
+        <div id="proj-wrap"></div>
         <div class="chart-full"><div class="card"><div class="card-title">Receitas vs Gastos</div><canvas id="ch-hist"></canvas></div></div>
         <div class="chart-grid">
           <div class="card"><div class="card-title">Balanço Mensal</div><canvas id="ch-bal"></canvas></div>
@@ -1099,6 +1179,41 @@ CREATE TABLE financas_metas (
         <div style="margin-top:16px"><div class="card"><div class="card-title">Meta vs Realidade — últimos 12 meses</div><canvas id="ch-meta"></canvas></div></div>
       </div>
 
+      <!-- ══ RECORRENTES ══ -->
+      <div id="panel-recorrentes" class="panel">
+        <div class="page-header">
+          <div class="page-title">Itens Recorrentes</div>
+          <div class="page-sub">Pré-preenchidos automaticamente ao abrir um mês novo</div>
+        </div>
+        <div id="recur-alert"></div>
+        <!-- Formulário para adicionar -->
+        <div class="resumo-card" style="margin-bottom:16px">
+          <h3 style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:14px">Adicionar Item Recorrente</h3>
+          <div style="display:grid;grid-template-columns:1fr 140px 140px auto;gap:10px;align-items:end">
+            <div>
+              <div style="font-size:.68rem;color:var(--t3);margin-bottom:5px">Descrição</div>
+              <input class="iinp" type="text" id="rc-desc" placeholder="Ex: Financiamento AP">
+            </div>
+            <div>
+              <div style="font-size:.68rem;color:var(--t3);margin-bottom:5px">Categoria</div>
+              <select class="iinp" id="rc-cat">
+                <option value="fix">Custo Fixo</option>
+                <option value="emp">Empréstimo</option>
+                <option value="cart">Cartão</option>
+                <option value="rec">Receita</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:.68rem;color:var(--t3);margin-bottom:5px">Valor padrão (R$)</div>
+              <input class="iinp val" type="number" id="rc-val" placeholder="0,00" step="0.01" min="0">
+            </div>
+            <button class="btn btn-primary" onclick="adicionarRecorrente()" style="padding:7px 16px;font-size:.78rem;align-self:end">Adicionar</button>
+          </div>
+        </div>
+        <!-- Lista de recorrentes por categoria -->
+        <div id="recur-list"></div>
+      </div>
+
       <!-- ══ LANÇAR MÊS ══ -->
       <div id="panel-lancar" class="panel">
         <div class="page-header"><div class="page-title">Lançar Mês</div></div>
@@ -1116,6 +1231,7 @@ CREATE TABLE financas_metas (
           <div class="sep"></div>
           <button class="btn btn-ghost" onclick="carregarMes()">Carregar</button>
           <button class="btn btn-warning" onclick="copiarMesAnterior()">⏮ Mês Anterior</button>
+          <button class="btn btn-ghost" style="border-color:rgba(52,211,153,.3);color:var(--accent)" onclick="aplicarRecorrentes()">↻ Recorrentes</button>
           <button class="btn btn-ghost" onclick="limparForm()">Limpar</button>
           <div class="sep"></div>
           <button class="btn btn-primary" onclick="salvarMes()">Salvar</button>
@@ -1219,6 +1335,26 @@ CREATE TABLE financas_metas (
               <button class="tpl-btn" onclick="tpl('emp')"><span>🏦</span> Empréstimos</button>
               <button class="tpl-btn" onclick="tpl('cart')"><span>💳</span> Cartões</button>
               <button class="tpl-btn accent" onclick="['rec','fix','emp','cart'].forEach(tpl)"><span>✦</span> Preencher tudo</button>
+            </div>
+
+            <!-- RECORRENTES FIXOS -->
+            <div class="rec-card">
+              <h3>
+                <span>Recorrentes Fixos</span>
+                <span style="color:var(--t3);font-weight:400;font-size:.65rem;cursor:help" title="Itens marcados aparecem pré-preenchidos ao abrir qualquer mês novo">ⓘ</span>
+              </h3>
+              <div id="rec-list"></div>
+              <div class="rec-add" style="margin-top:10px">
+                <input id="rec-inp-desc" placeholder="Descrição" onkeydown="if(event.key==='Enter')addRecorrente()">
+                <input id="rec-inp-val" type="number" placeholder="Valor" style="width:80px" onkeydown="if(event.key==='Enter')addRecorrente()">
+                <select class="rec-add-sec" id="rec-inp-sec">
+                  <option value="fix">Fixo</option>
+                  <option value="emp">Empréstimo</option>
+                  <option value="cart">Cartão</option>
+                  <option value="rec">Receita</option>
+                </select>
+                <button class="btn btn-ghost" style="padding:6px 10px;font-size:.72rem" onclick="addRecorrente()">+</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1481,12 +1617,12 @@ function showTab(n,el){
   el.classList.add('active');
   // sync sidebar + mobile tabs
   const allNavItems=[...document.querySelectorAll('.nav-item')];
-  const panelOrder=['visao','mensal','anual','metas','lancar'];
+  const panelOrder=['visao','mensal','anual','metas','recorrentes','lancar'];
   const idx=panelOrder.indexOf(n);
   if(idx>=0&&allNavItems[idx]) allNavItems[idx].classList.add('active');
   const allMob=[...document.querySelectorAll('.tab-mob')];
   if(idx>=0&&allMob[idx]) allMob[idx].classList.add('active');
-  ({visao:renderVisao,mensal:renderMensal,anual:renderAnual,metas:renderMetas,lancar:renderLancar})[n]?.();
+  ({visao:renderVisao,mensal:renderMensal,anual:renderAnual,metas:renderMetas,recorrentes:renderRecorrentes,lancar:renderLancar})[n]?.();
 }
 
 /* ── ALERTAS ── */
@@ -1529,6 +1665,9 @@ function renderAlertas(){
 
 /* ── VISÃO GERAL ── */
 function renderVisao(){
+  renderScore();
+  renderNarrativa();
+  renderProjecao();
   renderAlertas();
   const all=getAll(),med=calcMedias();
   const tR=all.reduce((s,m)=>s+m.r,0),tG=all.reduce((s,m)=>s+Math.abs(m.g),0),tB=all.reduce((s,m)=>s+m.b,0),pos=all.filter(m=>m.b>=0).length;
@@ -1987,6 +2126,311 @@ function exportarCSV(){
   URL.revokeObjectURL(url);
 }
 
+/* ════════════════════════════════════
+   1. SCORE DE SAÚDE FINANCEIRA
+════════════════════════════════════ */
+function calcScore(){
+  const all=getAll();
+  if(all.length<3) return null;
+  const u12=all.slice(-12); // últimos 12 meses
+  const n=u12.length;
+
+  // ── Fator 1: proporção receita/gasto (0–30 pts)
+  // ideal: receitas >= gastos. quanto maior a folga, melhor.
+  const avgR=u12.reduce((s,m)=>s+m.r,0)/n;
+  const avgG=u12.reduce((s,m)=>s+Math.abs(m.g),0)/n;
+  const ratioRG = avgG>0 ? avgR/avgG : 1;
+  const f1 = Math.min(30, Math.round(ratioRG * 20)); // 1.0 = 20pts, 1.5 = 30pts
+
+  // ── Fator 2: tendência dos últimos 3 meses (0–25 pts)
+  // olha se o balanço está melhorando ou piorando
+  const u3=all.slice(-3);
+  const tendencias=[];
+  for(let i=1;i<u3.length;i++) tendencias.push(u3[i].b - u3[i-1].b);
+  const tendMedia = tendencias.length ? tendencias.reduce((s,v)=>s+v,0)/tendencias.length : 0;
+  const f2 = tendMedia>500 ? 25 : tendMedia>0 ? 18 : tendMedia>-500 ? 10 : tendMedia>-2000 ? 4 : 0;
+
+  // ── Fator 3: cumprimento de metas (0–25 pts)
+  const metaR=+UM.r||0, metaG=(+UM.f||0)+(+UM.e||0)+(+UM.c||0);
+  let f3=12; // neutro se sem metas
+  if(metaR>0||metaG>0){
+    const ultimo=all[all.length-1];
+    let pts=0,checks=0;
+    if(metaR>0){ checks++; if(ultimo.r>=metaR) pts+=12; else pts+=Math.round((ultimo.r/metaR)*8); }
+    if(metaG>0){ checks++; if(Math.abs(ultimo.g)<=metaG) pts+=13; else pts+=Math.round((metaG/Math.abs(ultimo.g))*8); }
+    f3 = checks>0 ? Math.round(pts/checks*25/13) : 12;
+    f3 = Math.min(25,f3);
+  }
+
+  // ── Fator 4: variação de cartões (0–20 pts)
+  // cartões altos são sinal de endividamento
+  const avgCart=u12.reduce((s,m)=>s+Math.abs(m.c),0)/n;
+  const ratioCart = avgR>0 ? avgCart/avgR : 1;
+  const f4 = ratioCart<0.3 ? 20 : ratioCart<0.5 ? 16 : ratioCart<0.7 ? 10 : ratioCart<0.9 ? 5 : 0;
+
+  const total = Math.min(100, Math.max(0, f1+f2+f3+f4));
+  return { total, f1, f2, f3, f4, ratioRG, tendMedia };
+}
+
+function scoreLabel(s){
+  if(s>=80) return {label:'Excelente',color:'var(--accent)'};
+  if(s>=65) return {label:'Bom',color:'#86efac'};
+  if(s>=50) return {label:'Regular',color:'var(--yellow)'};
+  if(s>=35) return {label:'Atenção',color:'var(--orange)'};
+  return {label:'Crítico',color:'var(--red)'};
+}
+
+function renderScore(){
+  const wrap=document.getElementById('score-wrap');
+  if(!wrap) return;
+  const sc=calcScore();
+  if(!sc){ wrap.innerHTML=''; return; }
+  const {label,color}=scoreLabel(sc.total);
+  const fatores=[
+    {n:'Receita vs Gastos', pts:sc.f1, max:30},
+    {n:'Tendência 3 meses',  pts:sc.f2, max:25},
+    {n:'Metas',              pts:sc.f3, max:25},
+    {n:'Controle cartões',   pts:sc.f4, max:20},
+  ];
+  wrap.innerHTML=`
+    <div class="score-bar-wrap">
+      <div class="score-left">
+        <div class="score-title">Score de Saúde Financeira</div>
+        <div class="score-num" style="color:${color}">${sc.total}</div>
+        <div class="score-label" style="color:${color}">${label}</div>
+        <div class="score-track" style="max-width:240px">
+          <div class="score-fill" style="width:${sc.total}%;background:${color}"></div>
+        </div>
+      </div>
+      <div class="score-factors">
+        ${fatores.map(f=>`
+          <div class="score-factor">
+            <span class="score-factor-label">${f.n}</span>
+            <span class="score-factor-pts" style="color:${f.pts/f.max>0.6?'var(--accent)':f.pts/f.max>0.3?'var(--yellow)':'var(--red)'}">${f.pts}/${f.max}</span>
+            <div class="score-factor-bar">
+              <div class="score-factor-fill" style="width:${(f.pts/f.max*100).toFixed(0)}%;background:${f.pts/f.max>0.6?'var(--accent)':f.pts/f.max>0.3?'var(--yellow)':'var(--red)'}"></div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════
+   2. PROJEÇÃO DO MÊS ATUAL
+════════════════════════════════════ */
+function renderProjecao(){
+  const wrap=document.getElementById('proj-wrap');
+  if(!wrap) return;
+  const all=getAll();
+  if(all.length<6){ wrap.innerHTML=''; return; }
+
+  // mês atual real
+  const now=new Date();
+  const mesAtual=MESES[now.getMonth()];
+  const anoAtual=now.getFullYear();
+  const diasNoMes=new Date(anoAtual,now.getMonth()+1,0).getDate();
+  const diaAtual=now.getDate();
+  const percMes=diaAtual/diasNoMes; // 0..1
+
+  // verifica se já existe lançamento do mês atual
+  const mesLancado=all.find(m=>m.ano===anoAtual&&m.mes===mesAtual);
+
+  // média histórica do mesmo mês nos anos anteriores
+  const mesesIguais=all.filter(m=>m.mes===mesAtual&&m.ano<anoAtual);
+  // fallback: média geral dos últimos 12 meses
+  const base=mesesIguais.length>=2 ? mesesIguais : all.slice(-12);
+  const bn=base.length;
+  const medR=base.reduce((s,m)=>s+m.r,0)/bn;
+  const medG=base.reduce((s,m)=>s+Math.abs(m.g),0)/bn;
+  const medB=base.reduce((s,m)=>s+m.b,0)/bn;
+
+  let projR,projG,projB,fonte,parcial=false;
+  if(mesLancado){
+    // já lançou — extrapola pelo percentual do mês
+    projR=percMes>0.05 ? mesLancado.r/percMes : medR;
+    projG=percMes>0.05 ? Math.abs(mesLancado.g)/percMes : medG;
+    projB=projR-projG;
+    fonte=`baseado em ${diaAtual}/${diasNoMes} dias lançados`;
+    parcial=true;
+  } else {
+    projR=medR; projG=medG; projB=medB;
+    fonte=`média histórica de ${mesAtual}`;
+  }
+
+  const diffR=projR-medR, diffG=projG-medG, diffB=projB-medB;
+  const pBar=Math.min(100,Math.round(percMes*100));
+
+  wrap.innerHTML=`
+    <div class="proj-card">
+      <div class="proj-header">
+        <div class="proj-title">Projeção — ${mesAtual} ${anoAtual}</div>
+        <div class="proj-mes">${fonte}</div>
+      </div>
+      ${parcial?`
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--t3);margin-bottom:4px">
+          <span>Progresso do mês</span><span>${diaAtual} de ${diasNoMes} dias (${pBar}%)</span>
+        </div>
+        <div class="proj-progress"><div class="proj-fill" style="width:${pBar}%"></div></div>
+      </div>`:''}
+      <div class="proj-grid">
+        <div class="proj-item">
+          <div class="proj-item-label">Receita prevista</div>
+          <div class="proj-item-val pos">${fmt(projR)}</div>
+          <div class="proj-item-sub" style="color:${diffR>=0?'var(--accent)':'var(--red)'}">${diffR>=0?'+':''}${fmt(diffR)} vs média</div>
+        </div>
+        <div class="proj-item">
+          <div class="proj-item-label">Gastos previstos</div>
+          <div class="proj-item-val neg">${fmt(-projG)}</div>
+          <div class="proj-item-sub" style="color:${diffG<=0?'var(--accent)':'var(--red)'}">${diffG>=0?'+':''}${fmt(diffG)} vs média</div>
+        </div>
+        <div class="proj-item">
+          <div class="proj-item-label">Balanço previsto</div>
+          <div class="proj-item-val ${projB>=0?'pos':'neg'}">${fmt(projB)}</div>
+          <div class="proj-item-sub" style="color:${diffB>=0?'var(--accent)':'var(--red)'}">${diffB>=0?'+':''}${fmt(diffB)} vs média</div>
+        </div>
+        <div class="proj-item">
+          <div class="proj-item-label">Histórico ${mesAtual}</div>
+          <div class="proj-item-val" style="color:var(--t2);font-size:.82rem">${mesesIguais.length} anos</div>
+          <div class="proj-item-sub">média bal: ${fmt(medB)}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════
+   3. RESUMO NARRATIVO
+════════════════════════════════════ */
+function renderNarrativa(){
+  const wrap=document.getElementById('narrative-wrap');
+  if(!wrap) return;
+  const all=getAll();
+  if(all.length<6){ wrap.innerHTML=''; return; }
+
+  const u=all[all.length-1]; // último mês
+  const anteriores=all.slice(-13,-1);
+  const n=anteriores.length||1;
+  const avgG=anteriores.reduce((s,m)=>s+Math.abs(m.g),0)/n;
+  const avgR=anteriores.reduce((s,m)=>s+m.r,0)/n;
+  const avgB=anteriores.reduce((s,m)=>s+m.b,0)/n;
+  const anoAtual=u.ano;
+  const mesesAno=all.filter(m=>m.ano===anoAtual);
+  const balAno=mesesAno.reduce((s,m)=>s+m.b,0);
+  const piorMes=mesesAno.reduce((a,b)=>b.b<a.b?b:a);
+  const melhorMes=mesesAno.reduce((a,b)=>b.b>a.b?b:a);
+
+  // variações do último mês
+  const varG=avgG>0?((Math.abs(u.g)-avgG)/avgG*100).toFixed(0):0;
+  const varR=avgR>0?((u.r-avgR)/avgR*100).toFixed(0):0;
+  const varC=avgG>0?((Math.abs(u.c)/Math.abs(u.g))*100).toFixed(0):0;
+
+  // tendência dos últimos 3 meses
+  const u3=all.slice(-3);
+  const trend=u3.length>=2?(u3[u3.length-1].b>u3[0].b?'melhorando':'piorando'):'estável';
+
+  // monta frase
+  let frases=[];
+
+  // situação do último mês
+  if(u.b>=0){
+    frases.push(`Em <strong>${u.mes}/${u.ano}</strong> o balanço foi <strong class="${u.b>1000?'':''}pos">positivo em ${fmt(u.b)}</strong>.`);
+  } else {
+    frases.push(`Em <strong>${u.mes}/${u.ano}</strong> o balanço foi <strong class="neg-hl">${fmt(u.b)}</strong> — um déficit de ${fmt(Math.abs(u.b))}.`);
+  }
+
+  // gastos vs média
+  if(Math.abs(varG)>10){
+    const dir=varG>0?'acima':'abaixo';
+    const cls=varG>0?'neg-hl':'pos';
+    frases.push(`Os gastos ficaram <strong class="${cls}">${Math.abs(varG)}% ${dir} da média</strong>, puxados principalmente por cartões (${varC}% dos gastos totais).`);
+  }
+
+  // receita vs média
+  if(Math.abs(varR)>10){
+    const dir=varR>0?'acima':'abaixo';
+    const cls=varR>0?'pos':'warn-hl';
+    frases.push(`A receita ficou <strong class="${cls}">${Math.abs(varR)}% ${dir} da média histórica</strong>.`);
+  }
+
+  // tendência recente
+  frases.push(`A tendência dos últimos 3 meses está <strong>${trend==='melhorando'?'↗ melhorando':'↘ piorando'}</strong>.`);
+
+  // resumo do ano
+  if(mesesAno.length>=3){
+    const cls=balAno>=0?'pos':'neg-hl';
+    frases.push(`No acumulado de <strong>${anoAtual}</strong> (${mesesAno.length} meses), o resultado é <strong class="${cls}">${fmt(balAno)}</strong>. Melhor mês: ${melhorMes.mes} (${fmt(melhorMes.b)}). Pior: ${piorMes.mes} (${fmt(piorMes.b)}).`);
+  }
+
+  wrap.innerHTML=`<div class="narrative-card"><p class="narrative-text">${frases.join(' ')}</p></div>`;
+}
+
+/* ════════════════════════════════════
+   4. ITENS RECORRENTES FIXOS
+════════════════════════════════════ */
+// REC = [{desc, val, sec, ativo}]
+let REC=[];
+
+async function loadRec(){
+  try{ REC=JSON.parse(localStorage.getItem('rec_ff')||'[]'); }catch(e){REC=[];}
+  if(_sbReady&&_sb){
+    try{
+      const {data,error}=await _sb.from('financas_metas').select('data').eq('id','recorrentes').maybeSingle();
+      if(!error&&data?.data) REC=data.data;
+    }catch(e){}
+  }
+}
+
+async function saveRec(){
+  try{ localStorage.setItem('rec_ff',JSON.stringify(REC)); }catch(e){}
+  if(_sbReady&&_sb){
+    try{
+      await _sb.from('financas_metas').upsert({id:'recorrentes',data:REC,updated_at:new Date().toISOString()},{onConflict:'id'});
+    }catch(e){}
+  }
+}
+
+function renderRecorrentes(){
+  const el=document.getElementById('recur-list');
+  if(!el) return;
+  if(!Array.isArray(REC)||!REC.length){
+    el.innerHTML=`<div style="font-size:.74rem;color:var(--t3);padding:6px 0">Nenhum item recorrente. Adicione abaixo.</div>`;
+    return;
+  }
+  const catLabel={rec:'Receita',fix:'Fixo',emp:'Empréstimo',cart:'Cartão'};
+  const catColor={rec:'var(--accent)',fix:'var(--blue)',emp:'var(--yellow)',cart:'var(--purple)'};
+  el.innerHTML=REC.map((r,i)=>`
+    <div class="rec-row">
+      <div class="rec-check ${r.ativo?'on':''}" onclick="toggleRec(${i})" title="${r.ativo?'Desativar':'Ativar'}"></div>
+      <span class="rec-desc" style="color:${r.ativo?'var(--t1)':'var(--t3)'}">${r.desc} <span style="font-size:.62rem;color:${catColor[r.sec]||'var(--t3)'}">${catLabel[r.sec]||r.sec}</span></span>
+      <span class="rec-val">${r.val?fmt(r.val):''}</span>
+      <button class="rec-del" onclick="delRec(${i})">✕</button>
+    </div>`).join('');
+}
+
+function toggleRec(i){ REC[i].ativo=!REC[i].ativo; saveRec(); renderRecorrentes(); }
+function delRec(i){ REC.splice(i,1); saveRec(); renderRecorrentes(); }
+
+function addRecorrente(){
+  const desc=document.getElementById('rc-desc')?.value.trim();
+  const val=parseFloat(document.getElementById('rc-val')?.value)||0;
+  const sec=document.getElementById('rc-cat')?.value||'fix';
+  if(!desc) return;
+  REC.push({desc,val,sec,ativo:true});
+  saveRec(); renderRecorrentes();
+  document.getElementById('rc-desc').value='';
+  document.getElementById('rc-val').value='';
+}
+
+// injeta recorrentes ativos ao iniciar um mês novo
+function injetarRecorrentes(){
+  const ativos=REC.filter(r=>r.ativo);
+  if(!ativos.length) return;
+  ativos.forEach(r=>{ if(r.val>0) addRow(r.sec,r.desc,r.val); else addRow(r.sec,r.desc,''); });
+}
+
+function adicionarRecorrente(){ addRecorrente(); }
+function aplicarRecorrentes(){ injetarRecorrentes(); showAlert('↻ Recorrentes adicionados.','alert-s'); }
+
 /* ── INIT ── */
 document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
 async function init(){
@@ -1999,6 +2443,7 @@ async function init(){
     setTimeout(()=>abrirSetup(),800);
   }
   await loadSt();
+  await loadRec();
   initF();
   initCmpSelects();
   renderVisao();
