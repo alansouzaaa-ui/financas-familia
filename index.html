@@ -296,7 +296,7 @@ body {
 .detail-inner.open { display: block; }
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   padding: 14px 16px 16px 44px;
 }
@@ -777,7 +777,7 @@ select.linp { cursor: pointer; }
 .hist-header-title { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--t3); }
 .hist-cols {
   display: grid;
-  grid-template-columns: 130px 1fr 1fr 1fr 50px 64px;
+  grid-template-columns: 130px 1fr 1fr 1fr 90px 64px;
   gap: 10px;
   padding: 7px 18px;
   font-size: .62rem;
@@ -789,11 +789,11 @@ select.linp { cursor: pointer; }
 }
 .hist-row {
   display: grid;
-  grid-template-columns: 130px 1fr 1fr 1fr 50px 64px;
+  grid-template-columns: 130px 1fr 1fr 1fr 90px 64px;
   gap: 10px;
   padding: 10px 18px;
   border-bottom: 1px solid rgba(255,255,255,.03);
-  align-items: center;
+  align-items: start;
   font-size: .78rem;
   transition: background .1s;
 }
@@ -1381,7 +1381,7 @@ CREATE TABLE financas_metas (
               <div class="ls-body">
                 <div class="col-hdr"><span title="Pago/Recebido">✓</span><span>Descrição</span><span style="text-align:right">Valor (R$)</span><span></span></div>
                 <div id="rows-rec"></div>
-                <button class="add-btn" onclick="addRow('rec')">+ nova linha</button>
+                <button class="add-btn" onclick="addRow('rec','','',true)">+ nova linha</button>
               </div>
             </div>
 
@@ -1396,7 +1396,7 @@ CREATE TABLE financas_metas (
               <div class="ls-body">
                 <div class="col-hdr"><span title="Pago/Recebido">✓</span><span>Descrição</span><span style="text-align:right">Valor (R$)</span><span></span></div>
                 <div id="rows-fix"></div>
-                <button class="add-btn" onclick="addRow('fix')">+ nova linha</button>
+                <button class="add-btn" onclick="addRow('fix','','',false)">+ nova linha</button>
               </div>
             </div>
 
@@ -1411,7 +1411,7 @@ CREATE TABLE financas_metas (
               <div class="ls-body">
                 <div class="col-hdr"><span title="Pago/Recebido">✓</span><span>Descrição</span><span style="text-align:right">Valor (R$)</span><span></span></div>
                 <div id="rows-emp"></div>
-                <button class="add-btn" onclick="addRow('emp')">+ nova linha</button>
+                <button class="add-btn" onclick="addRow('emp','','',false)">+ nova linha</button>
               </div>
             </div>
 
@@ -1426,7 +1426,7 @@ CREATE TABLE financas_metas (
               <div class="ls-body">
                 <div class="col-hdr"><span title="Pago/Recebido">✓</span><span>Descrição</span><span style="text-align:right">Valor (R$)</span><span></span></div>
                 <div id="rows-cart"></div>
-                <button class="add-btn" onclick="addRow('cart')">+ nova linha</button>
+                <button class="add-btn" onclick="addRow('cart','','',false)">+ nova linha</button>
               </div>
             </div>
 
@@ -1444,7 +1444,12 @@ CREATE TABLE financas_metas (
               </div>
               <div class="bal-display">
                 <div class="bal-num" id="r-bal">R$ 0,00</div>
-                <div class="bal-label">Balanço do Mês</div>
+                <div class="bal-label" id="r-bal-label">Balanço Consolidado</div>
+              </div>
+              <!-- Projeção quando há pendentes -->
+              <div id="r-proj-wrap" style="display:none;text-align:center;padding:6px 0 10px">
+                <div style="font-size:.68rem;color:var(--t3);margin-bottom:3px">Projeção (com pendentes)</div>
+                <div class="bal-num" id="r-proj" style="font-size:1.35rem">R$ 0,00</div>
               </div>
               <div class="divider"></div>
               <div id="r-comp"></div>
@@ -1647,7 +1652,14 @@ async function salvarConfigSb(){
     const client=supabase.createClient(url,key);
     // testa conexão simples
     const {error}=await client.from('financas_metas').select('id').limit(1);
-    if(error&&error.code!=='PGRST116') throw error;
+    // PGRST116 = tabela vazia (ok), outros erros = credenciais inválidas ou tabela inexistente
+    if(error){
+      if(error.code==='PGRST116'||error.message?.includes('0 rows')) {
+        // tabela existe mas vazia — ok
+      } else {
+        throw new Error(error.message||'Credenciais inválidas ou tabelas não criadas');
+      }
+    }
     saveSbConfig(url,key);
     _sb=client; _sbReady=true;
     fecharSetup();
@@ -1662,17 +1674,20 @@ async function salvarConfigSb(){
 // ── LOAD ──
 async function loadSt(){
   setSyncStatus('spin','carregando...');
+  // sempre carrega local primeiro como segurança
+  try{ const _sm=localStorage.getItem('sm_ff'); if(_sm) SM=JSON.parse(_sm); }catch(e){SM=SM||{};}
+  try{ const _um=localStorage.getItem('um_ff'); if(_um) UM=JSON.parse(_um); }catch(e){UM=UM||{};}
+
   if(_sbReady && _sb){
     try{
-      // meses
       const {data:md,error:me}=await _sb.from('financas_meses').select('id,data');
       if(me) throw me;
       SM={};
       (md||[]).forEach(row=>{ SM[row.id]=row.data; });
-      // metas
       const {data:ud,error:ue}=await _sb.from('financas_metas').select('data').eq('id','metas').maybeSingle();
       if(ue) throw ue;
-      UM=ud?.data||{};
+      // garante que UM nunca seja null/undefined
+      UM=(ud?.data && typeof ud.data==='object') ? ud.data : (UM||{});
       setSyncStatus('ok','sincronizado');
       return;
     }catch(e){
@@ -1680,9 +1695,9 @@ async function loadSt(){
       setSyncStatus('err','usando local');
     }
   }
-  // fallback localStorage
-  try{ SM=JSON.parse(localStorage.getItem('sm_ff')||'{}'); }catch(e){SM={};}
-  try{ UM=JSON.parse(localStorage.getItem('um_ff')||'{}'); }catch(e){UM={};}
+  // confirma fallback
+  if(!SM || typeof SM!=='object') SM={};
+  if(!UM || typeof UM!=='object') UM={};
   if(_sbReady) setSyncStatus('err','usando local');
   else setSyncStatus('local','local');
 }
@@ -1751,7 +1766,8 @@ function buildSuggestions(){
 /* ══════════════════════════════════════
    FILTRO DE PERÍODO — VISÃO GERAL
 ══════════════════════════════════════ */
-let activePeriod = 'tudo';
+// Restaura último filtro usado (persiste em localStorage)
+let activePeriod = (()=>{ try{ return localStorage.getItem('period_pref')||'tudo'; }catch(e){return 'tudo';} })();
 let customDe = null;   // {ano, mes}
 let customAte = null;  // {ano, mes}
 
@@ -1841,12 +1857,25 @@ function setPeriod(period, btn){
   // mostra/oculta campos custom
   const customEl = document.getElementById('period-custom');
   if(customEl) customEl.classList.toggle('open', period === 'custom');
+  // persiste preferência
+  try{ localStorage.setItem('period_pref', period); }catch(e){}
   // re-renderiza visao
   renderVisao();
 }
 
 function initPeriodBar(){
   initPeriodSelects();
+  // restaura pill ativa conforme período salvo no localStorage
+  const pills = document.querySelectorAll('.period-pill');
+  pills.forEach(btn=>{
+    btn.classList.remove('active');
+    const onclick = btn.getAttribute('onclick')||'';
+    const match = onclick.match(/setPeriod\('([^']+)'/);
+    if(match && match[1]===activePeriod) btn.classList.add('active');
+  });
+  // abre campos custom se necessário
+  const customEl = document.getElementById('period-custom');
+  if(customEl && activePeriod==='custom') customEl.classList.add('open');
 }
 const CHS={};
 const dc=id=>{if(CHS[id]){CHS[id].destroy();delete CHS[id];}};
@@ -1873,7 +1902,14 @@ function showTab(n,el){
 function gerarAlertas(){
   const all=getAll();
   if(all.length<6)return[];
-  const alertas=[],ultimo=all[all.length-1],anteriores=all.slice(-13,-1);
+  const alertas=[];
+  // Se existe lançamento do mês atual em SM, usa ele como "último"
+  const now=new Date();
+  const keyAtual=`${now.getFullYear()}-${MESES[now.getMonth()]}`;
+  const temAtual=!!SM[keyAtual];
+  const ultimo=temAtual?all.find(m=>m.ano===now.getFullYear()&&m.mes===MESES[now.getMonth()])||all[all.length-1]:all[all.length-1];
+  const idxUltimo=all.indexOf(ultimo);
+  const anteriores=all.slice(Math.max(0,idxUltimo-12),idxUltimo);
   if(anteriores.length<3)return[];
   const n=anteriores.length;
   const avgR=anteriores.reduce((s,m)=>s+m.r,0)/n,avgC=anteriores.reduce((s,m)=>s+Math.abs(m.c),0)/n,avgG=anteriores.reduce((s,m)=>s+Math.abs(m.g),0)/n,avgE=anteriores.reduce((s,m)=>s+Math.abs(m.e),0)/n;
@@ -1959,7 +1995,7 @@ function renderVisao(){
   const p=allData[0],u=allData[allData.length-1];
   if(p&&u) document.getElementById('hdr-periodo').textContent=`${p.mes.slice(0,3)}/${p.ano} — ${u.mes.slice(0,3)}/${u.ano}`;
 
-  renderTop10('todos');
+  renderTop10(top10Cat||'todos');
 }
 
 /* ── MENSAL ── */
@@ -2142,7 +2178,7 @@ function getItens(sec){
     d:r.querySelector('input[type=text]').value.trim(),
     v:parseFloat(r.querySelector('input[type=number]').value)||0,
     p:!r.classList.contains('pendente'), // pago = não tem classe pendente
-  })).filter(i=>i.d||i.v>0);
+  })).filter(i=>(i.d&&i.d.trim())&&i.v>0);
 }
 
 function recalc(){
@@ -2162,7 +2198,34 @@ function recalc(){
   document.getElementById('r-emp').textContent=fmt(-e);
   document.getElementById('r-cart').textContent=fmt(-c);
   document.getElementById('r-gas').textContent=fmt(-g);
-  const bb=document.getElementById('r-bal');bb.textContent=fmt(b);bb.style.color=b>=0?'var(--accent)':'var(--red)';
+  const bb=document.getElementById('r-bal');
+  // Consolidado = só itens marcados como pagos/recebidos
+  const bConsolidado = ir.filter(i=>i.p).reduce((s,i)=>s+i.v,0)
+                     - iF.filter(i=>i.p).reduce((s,i)=>s+i.v,0)
+                     - ie.filter(i=>i.p).reduce((s,i)=>s+i.v,0)
+                     - ic.filter(i=>i.p).reduce((s,i)=>s+i.v,0);
+  // Projeção = todos os itens (pago + pendente)
+  const bTotal = b;
+  const temPendente = [...ir,...iF,...ie,...ic].some(i=>!i.p);
+
+  if(bb){
+    bb.textContent=fmt(bConsolidado);
+    bb.style.color=bConsolidado>=0?'var(--accent)':'var(--red)';
+  }
+  const lblEl=document.getElementById('r-bal-label');
+  if(lblEl) lblEl.textContent=temPendente?'Saldo Consolidado':'Balanço do Mês';
+
+  const projWrap=document.getElementById('r-proj-wrap');
+  const projEl=document.getElementById('r-proj');
+  if(projWrap&&projEl){
+    if(temPendente){
+      projWrap.style.display='block';
+      projEl.textContent=fmt(bTotal);
+      projEl.style.color=bTotal>=0?'rgba(52,211,153,.6)':'rgba(248,113,113,.6)';
+    } else {
+      projWrap.style.display='none';
+    }
+  }
   document.getElementById('ni-rec').textContent=ir.length;
   document.getElementById('ni-gas').textContent=iF.length+ie.length+ic.length;
 
@@ -2193,31 +2256,95 @@ function recalc(){
   }
 }
 
-function limparForm(){['rec','fix','emp','cart'].forEach(s=>{document.getElementById('rows-'+s).innerHTML='';addRow(s);});document.getElementById('l-nota').value='';recalc();}
+function limparForm(){['rec','fix','emp','cart'].forEach(s=>{document.getElementById('rows-'+s).innerHTML='';addRow(s,'','',s==='rec');});document.getElementById('l-nota').value='';recalc();}
 function tpl(sec){document.getElementById('rows-'+sec).innerHTML='';(TPL[sec]||[]).forEach(t=>addRow(sec,t.d,'',sec==='rec'));recalc();}
 
 function copiarMesAnterior(){
   const mes=document.getElementById('l-mes').value,ano=parseInt(document.getElementById('l-ano').value),idx=MESES.indexOf(mes);
   const mesAnt=idx===0?MESES[11]:MESES[idx-1],anoAnt=idx===0?ano-1:ano,fonte=SM[`${anoAnt}-${mesAnt}`];
-  if(!fonte){showAlert(`Nenhum lançamento encontrado para <strong>${mesAnt}/${anoAnt}</strong>.`,'alert-w');return;}
+  if(!fonte||typeof fonte!=='object'){showAlert(`Nenhum lançamento encontrado para <strong>${mesAnt}/${anoAnt}</strong>.`,'alert-w');return;}
+  // garante que todas as seções existem (dados antigos podem não ter)
+  fonte={ir:[],if:[],ie:[],ic:[],...fonte};
   ['rec','fix','emp','cart'].forEach(s=>document.getElementById('rows-'+s).innerHTML='');
   (fonte.ir||[]).forEach(i=>addRow('rec',i.d,'',false));
   (fonte.if||[]).forEach(i=>addRow('fix',i.d,'',false));
   (fonte.ie||[]).forEach(i=>addRow('emp',i.d,'',false));
   (fonte.ic||[]).forEach(i=>addRow('cart',i.d,'',false));
-  if(!fonte.ir?.length)addRow('rec');if(!fonte.if?.length)addRow('fix');if(!fonte.ie?.length)addRow('emp');if(!fonte.ic?.length)addRow('cart');
+  if(!fonte.ir?.length)addRow('rec','','',true);if(!fonte.if?.length)addRow('fix','','',false);if(!fonte.ie?.length)addRow('emp','','',false);if(!fonte.ic?.length)addRow('cart','','',false);
   recalc();showAlert(`Estrutura de <strong>${mesAnt}/${anoAnt}</strong> copiada — preencha os valores.`,'alert-i');
 }
-function onMesAnoChange(){}
+function onMesAnoChange(){
+  const mes=document.getElementById('l-mes')?.value;
+  const ano=parseInt(document.getElementById('l-ano')?.value);
+  if(!mes||!ano) return;
+  const key=`${ano}-${mes}`;
+  const box=document.getElementById('l-alert');
+  if(!box) return;
+  if(SM[key]){
+    const d=SM[key];
+    const ni=(d.ir?.length||0)+(d.if?.length||0)+(d.ie?.length||0)+(d.ic?.length||0);
+    const nPend=[...(d.ir||[]),...(d.if||[]),...(d.ie||[]),...(d.ic||[])].filter(i=>!i.p).length;
+    box.innerHTML=`<div class="alert alert-i" style="margin-bottom:8px">
+      <span class="al-icon">ℹ</span>
+      <span class="al-body"><strong>${mes}/${ano}</strong> já tem ${ni} lançamento(s)${nPend>0?` — ${nPend} pendente(s)`:''} — clique <strong>Carregar</strong> para continuar editando.</span>
+    </div>`;
+    setTimeout(()=>{if(box.innerHTML.includes(mes+'/'+ano))box.innerHTML='';},5000);
+  } else {
+    box.innerHTML='';
+  }
+}
 
 function salvarMes(){
   const mes=document.getElementById('l-mes').value,ano=parseInt(document.getElementById('l-ano').value);
-  const ir=getItens('rec').map(i=>({d:i.d,v:i.v,p:i.p})),iF=getItens('fix').map(i=>({d:i.d,v:i.v,p:i.p})),ie=getItens('emp').map(i=>({d:i.d,v:i.v,p:i.p})),ic=getItens('cart').map(i=>({d:i.d,v:i.v,p:i.p}));
+  const key=`${ano}-${mes}`;
+  const ir=getItens('rec').map(i=>({d:i.d,v:i.v,p:i.p}));
+  const iF=getItens('fix').map(i=>({d:i.d,v:i.v,p:i.p}));
+  const ie=getItens('emp').map(i=>({d:i.d,v:i.v,p:i.p}));
+  const ic=getItens('cart').map(i=>({d:i.d,v:i.v,p:i.p}));
   const nota=document.getElementById('l-nota').value.trim();
-  const tR=ir.reduce((s,i)=>s+i.v,0),tG=iF.reduce((s,i)=>s+i.v,0)+ie.reduce((s,i)=>s+i.v,0)+ic.reduce((s,i)=>s+i.v,0);
+  const tR=ir.reduce((s,i)=>s+i.v,0);
+  const tG=iF.reduce((s,i)=>s+i.v,0)+ie.reduce((s,i)=>s+i.v,0)+ic.reduce((s,i)=>s+i.v,0);
   if(!tR&&!tG){showAlert('Preencha ao menos um valor antes de salvar.','alert-w');return;}
-  SM[`${ano}-${mes}`]={ano,mes,ir,if:iF,ie,ic,nota,at:new Date().toISOString()};
-  saveSt();showAlert(`<strong>${mes}/${ano}</strong> salvo. Balanço: <strong>${fmt(tR-tG)}</strong>`,'alert-s');renderHist();
+
+  // ── MERGE acumulativo ──
+  // Se já existe lançamento para este mês, faz merge inteligente:
+  // - Itens com mesma descrição: atualiza valor e status
+  // - Itens novos (descrição não existe): adiciona ao final
+  const existing=SM[key];
+  if(existing){
+    const mergeSec=(novas,antigas)=>{
+      const resultado=[...antigas];
+      novas.forEach(novo=>{
+        const idx=resultado.findIndex(a=>a.d.toLowerCase()===novo.d.toLowerCase());
+        if(idx>=0){
+          // Atualiza valor e status do item existente
+          resultado[idx]={...resultado[idx],v:novo.v,p:novo.p};
+        } else {
+          // Novo item — adiciona
+          resultado.push(novo);
+        }
+      });
+      return resultado;
+    };
+    SM[key]={
+      ano,mes,
+      ir: mergeSec(ir, existing.ir||[]),
+      if: mergeSec(iF, existing.if||[]),
+      ie: mergeSec(ie, existing.ie||[]),
+      ic: mergeSec(ic, existing.ic||[]),
+      nota: nota||existing.nota||'',
+      at: new Date().toISOString()
+    };
+    const total=SM[key].ir.length + SM[key].if.length + SM[key].ie.length + SM[key].ic.length;
+    const b=SM[key].ir.reduce((s,i)=>s+i.v,0) - SM[key].if.reduce((s,i)=>s+i.v,0) - SM[key].ie.reduce((s,i)=>s+i.v,0) - SM[key].ic.reduce((s,i)=>s+i.v,0);
+    saveSt();
+    showAlert(`<strong>${mes}/${ano}</strong> atualizado — ${total} itens. Balanço total: <strong>${fmt(b)}</strong>`,'alert-s');
+  } else {
+    SM[key]={ano,mes,ir,if:iF,ie,ic,nota,at:new Date().toISOString()};
+    saveSt();
+    showAlert(`<strong>${mes}/${ano}</strong> salvo. Balanço: <strong>${fmt(tR-tG)}</strong>`,'alert-s');
+  }
+  renderHist();
 }
 
 function carregarMes(){
@@ -2228,7 +2355,7 @@ function carregarMes(){
   (d.if||[]).forEach(i=>addRow('fix',i.d,i.v,i.p??false));
   (d.ie||[]).forEach(i=>addRow('emp',i.d,i.v,i.p??false));
   (d.ic||[]).forEach(i=>addRow('cart',i.d,i.v,i.p??false));
-  if(!d.ir?.length)addRow('rec');if(!d.if?.length)addRow('fix');if(!d.ie?.length)addRow('emp');if(!d.ic?.length)addRow('cart');
+  if(!d.ir?.length)addRow('rec','','',true);if(!d.if?.length)addRow('fix','','',false);if(!d.ie?.length)addRow('emp','','',false);if(!d.ic?.length)addRow('cart','','',false);
   document.getElementById('l-nota').value=d.nota||'';recalc();
   showAlert(`<strong>${mes}/${ano}</strong> carregado para edição.`,'alert-s');
 }
@@ -2250,15 +2377,31 @@ function renderHist(){
       <span class="hist-header-title">Lançamentos Manuais · ${keys.length}</span>
       <button class="btn-export" onclick="exportarCSV()" title="Exportar todos como CSV">↓ CSV</button>
     </div>
-    <div class="hist-cols"><span>Mês</span><span>Receitas</span><span>Gastos</span><span>Balanço</span><span>Itens</span><span>Ações</span></div>
+    <div class="hist-cols"><span>Mês</span><span>Receitas</span><span>Gastos</span><span>Consolidado</span><span>Status</span><span>Ações</span></div>
     ${sorted.map(k=>{
-      const m=SM[k],r=sum(m.ir),f=sum(m.if||[]),e=sum(m.ie||[]),c=sum(m.ic||[]),g=f+e+c,b=r-g,ni=(m.ir?.length||0)+(m.if?.length||0)+(m.ie?.length||0)+(m.ic?.length||0);
+      const m=SM[k];
+      const todosItens=[...(m.ir||[]),...(m.if||[]),...(m.ie||[]),...(m.ic||[])];
+      const r=sum(m.ir),f=sum(m.if||[]),e=sum(m.ie||[]),c=sum(m.ic||[]),g=f+e+c,b=r-g;
+      const ni=todosItens.length;
+      const nPago=todosItens.filter(i=>i.p).length;
+      const nPend=todosItens.filter(i=>!i.p).length;
+      const temPendente=nPend>0;
+      // consolidado = só itens pagos/recebidos
+      const rPago=(m.ir||[]).filter(i=>i.p).reduce((s,i)=>s+i.v,0);
+      const gPago=[...(m.if||[]),...(m.ie||[]),...(m.ic||[])].filter(i=>i.p).reduce((s,i)=>s+i.v,0);
+      const bCons=rPago-gPago;
       return`<div class="hist-row">
         <span class="hist-month">${m.mes}/${m.ano}${m.nota?` <span title="${m.nota}" style="cursor:help;opacity:.5">📝</span>`:''}</span>
         <span class="pos" style="font-family:var(--mono)">${fmt(r)}</span>
         <span class="neg" style="font-family:var(--mono)">${fmt(-g)}</span>
-        <span class="${b>=0?'pos':'neg'}" style="font-family:var(--mono)">${fmt(b)}</span>
-        <span style="color:var(--t3);font-family:var(--mono)">${ni}</span>
+        <div>
+          <span class="${bCons>=0?'pos':'neg'}" style="font-family:var(--mono)">${fmt(bCons)}</span>
+          ${temPendente?`<div style="font-size:.62rem;color:var(--t3);margin-top:2px">proj. <span style="color:${b>=0?'var(--accent)':'var(--red)'};font-family:var(--mono)">${fmt(b)}</span></div>`:''}
+        </div>
+        <div>
+          ${nPago>0?`<span class="badge bp" style="font-size:.6rem;padding:1px 6px">${nPago}✓</span> `:''}
+          ${nPend>0?`<span class="badge bm" style="font-size:.6rem;padding:1px 6px">${nPend} pend.</span>`:''}
+        </div>
         <div class="hist-actions">
           <button class="hbtn" onclick="editMes('${k}')" title="Editar">✏</button>
           <button class="hbtn del" onclick="delMes('${k}')" title="Remover">✕</button>
@@ -2269,11 +2412,31 @@ function renderHist(){
 }
 
 function renderLancar(){
-  ['rec','fix','emp','cart'].forEach(s=>{const c=document.getElementById('rows-'+s);if(!c.children.length)addRow(s);});
-  recalc();renderHist();
   const n=new Date();
-  document.getElementById('l-mes').value=MESES[n.getMonth()];
-  document.getElementById('l-ano').value=n.getFullYear();
+  const mesAtual=MESES[n.getMonth()];
+  const anoAtual=n.getFullYear();
+  document.getElementById('l-mes').value=mesAtual;
+  document.getElementById('l-ano').value=anoAtual;
+
+  // Se já tem lançamento do mês atual, carrega automaticamente
+  const key=`${anoAtual}-${mesAtual}`;
+  if(SM[key]){
+    ['rec','fix','emp','cart'].forEach(s=>document.getElementById('rows-'+s).innerHTML='');
+    const d=SM[key];
+    (d.ir||[]).forEach(i=>addRow('rec',i.d,i.v,i.p??true));
+    (d.if||[]).forEach(i=>addRow('fix',i.d,i.v,i.p??false));
+    (d.ie||[]).forEach(i=>addRow('emp',i.d,i.v,i.p??false));
+    (d.ic||[]).forEach(i=>addRow('cart',i.d,i.v,i.p??false));
+    if(!d.ir?.length)addRow('rec','','',true);if(!d.if?.length)addRow('fix','','',false);
+    if(!d.ie?.length)addRow('emp','','',false);if(!d.ic?.length)addRow('cart','','',false);
+    document.getElementById('l-nota').value=d.nota||'';
+  } else {
+    ['rec','fix','emp','cart'].forEach(s=>{
+      const c=document.getElementById('rows-'+s);
+      if(!c.children.length)addRow(s,'','',s==='rec');
+    });
+  }
+  recalc();renderHist();
 }
 
 /* ══════════════════════════════════════
@@ -2296,7 +2459,11 @@ function renderTop10(cat,btn){
   });
   // para meses históricos sem itens, não temos detalhe — só exibe se há SM
   if(!itens.length){
-    document.getElementById('top10-list').innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:12px 0">Nenhum dado de item encontrado. Lance alguns meses para ver o ranking.</div>`;
+    document.getElementById('top10-list').innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:16px 0;text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:8px;opacity:.3">◈</div>
+      Nenhum dado detalhado ainda.<br>
+      <span style="font-size:.74rem">Lance um mês em <strong style="color:var(--accent)">Lançar Mês</strong> para ver o ranking.</span>
+    </div>`;
     return;
   }
   // agrupa por descrição, soma valores
@@ -2351,6 +2518,12 @@ function renderMensalChart(){
     datasets.push({label:'Cartões',data:ad.map(m=>Math.abs(m.c)),borderColor:'rgba(167,139,250,.8)',backgroundColor:'rgba(167,139,250,.06)',tension:.35,fill:activeCatFilter==='cart',pointRadius:3});
   if(activeCatFilter==='todos')
     datasets.push({label:'Balanço',data:ad.map(m=>m.b),borderColor:'rgba(251,191,36,.6)',tension:.35,pointRadius:3,borderDash:[5,4]});
+  if(!ad.length){
+    const cvs=document.getElementById('ch-mev');
+    if(cvs){const ctx=cvs.getContext('2d');ctx.clearRect(0,0,cvs.width,cvs.height);}
+    document.getElementById('mev-title').textContent='Sem dados para o período selecionado';
+    return;
+  }
   CHS.mev=new Chart(document.getElementById('ch-mev'),{type:'line',data:{labels:lbs,datasets},options:{responsive:true,plugins:CL,scales:CX}});
 }
 
@@ -2390,8 +2563,11 @@ function renderComparar(){
   if(!res)return;
   if(!aMes||!bMes){res.innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:8px 0">Selecione os dois meses para comparar.</div>`;return;}
   const all=getAll();
-  const a=all.find(m=>m.ano===aAno&&m.mes===aMes),b=all.find(m=>m.ano===bAno&&m.mes===bMes);
-  if(!a||!b){res.innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:8px 0">Um dos meses não tem dados disponíveis.</div>`;return;}
+  const a=all.find(m=>m.ano===aAno&&m.mes===aMes)||null;
+  const b=all.find(m=>m.ano===bAno&&m.mes===bMes)||null;
+  if(!a&&!b){res.innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:8px 0">Selecione dois meses válidos para comparar.</div>`;return;}
+  if(!a){res.innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:8px 0"><strong>${aMes}/${aAno}</strong> não tem dados disponíveis.</div>`;return;}
+  if(!b){res.innerHTML=`<div style="color:var(--t3);font-size:.8rem;padding:8px 0"><strong>${bMes}/${bAno}</strong> não tem dados disponíveis.</div>`;return;}
 
   const rows=[
     {l:'Receitas',va:a.r,vb:b.r,pos:true},
@@ -2444,10 +2620,10 @@ function exportarCSV(){
   const keys=Object.keys(SM);
   if(!keys.length) return;
   const sorted=keys.sort((a,b)=>{const[ya,ma]=a.split('-'),[yb,mb]=b.split('-');return ya!==yb?+ya-+yb:MESES.indexOf(ma)-MESES.indexOf(mb);});
-  let csv='Ano,Mês,Tipo,Descrição,Valor\n';
+  let csv='Ano,Mês,Tipo,Descrição,Valor,Status\n';
   sorted.forEach(k=>{
     const m=SM[k];
-    const addRows=(arr,tipo)=>(arr||[]).forEach(i=>{if(i.d||i.v) csv+=`${m.ano},${m.mes},${tipo},"${(i.d||'').replace(/"/g,'""')}",${i.v.toFixed(2)}\n`;});
+    const addRows=(arr,tipo)=>(arr||[]).forEach(i=>{if(i.d||i.v) csv+=`${m.ano},${m.mes},${tipo},"${(i.d||'').replace(/"/g,'""')}",${i.v.toFixed(2)},${i.p===false?"Pendente":"Pago"}\n`;});
     addRows(m.ir,'Receita');
     addRows(m.if,'Custo Fixo');
     addRows(m.ie,'Empréstimo');
@@ -2463,7 +2639,7 @@ function exportarCSV(){
    1. SCORE DE SAÚDE FINANCEIRA
 ════════════════════════════════════ */
 function calcScore(){
-  const all=getAll();
+  const all=getPeriodData();
   if(all.length<3) return null;
   const u12=all.slice(-12); // últimos 12 meses
   const n=u12.length;
@@ -2637,7 +2813,7 @@ function renderProjecao(){
 function renderNarrativa(){
   const wrap=document.getElementById('narrative-wrap');
   if(!wrap) return;
-  const all=getAll();
+  const all=getPeriodData();
   if(all.length<6){ wrap.innerHTML=''; return; }
 
   const u=all[all.length-1]; // último mês
@@ -2704,13 +2880,21 @@ function renderNarrativa(){
 let REC=[];
 
 async function loadRec(){
-  try{ REC=JSON.parse(localStorage.getItem('rec_ff')||'[]'); }catch(e){REC=[];}
+  // helper: garante sempre array válido
+  const toArr=v=>{
+    if(Array.isArray(v)) return v;
+    if(v && typeof v==='object') return Object.values(v);
+    return [];
+  };
+  try{ REC=toArr(JSON.parse(localStorage.getItem('rec_ff')||'[]')); }catch(e){REC=[];}
   if(_sbReady&&_sb){
     try{
       const {data,error}=await _sb.from('financas_metas').select('data').eq('id','recorrentes').maybeSingle();
-      if(!error&&data?.data) REC=data.data;
+      if(!error&&data?.data) REC=toArr(data.data);
     }catch(e){}
   }
+  // garante que cada item tem id único (migração de versões antigas)
+  REC=REC.map((r,i)=>r.id?r:{...r,id:'rc_'+(Date.now()+i)});
 }
 
 async function saveRec(){
@@ -2733,15 +2917,15 @@ function renderRecorrentes(){
   const catColor={rec:'var(--accent)',fix:'var(--blue)',emp:'var(--yellow)',cart:'var(--purple)'};
   el.innerHTML=REC.map((r,i)=>`
     <div class="rec-row">
-      <div class="rec-check ${r.ativo?'on':''}" onclick="toggleRec(${i})" title="${r.ativo?'Desativar':'Ativar'}"></div>
+      <div class="rec-check ${r.ativo?'on':''}" onclick="toggleRec('${r.id}')" title="${r.ativo?'Desativar':'Ativar'}"></div>
       <span class="rec-desc" style="color:${r.ativo?'var(--t1)':'var(--t3)'}">${r.desc} <span style="font-size:.62rem;color:${catColor[r.sec]||'var(--t3)'}">${catLabel[r.sec]||r.sec}</span></span>
       <span class="rec-val">${r.val?fmt(r.val):''}</span>
-      <button class="rec-del" onclick="delRec(${i})">✕</button>
+      <button class="rec-del" onclick="delRec('${r.id}')">✕</button>
     </div>`).join('');
 }
 
-function toggleRec(i){ REC[i].ativo=!REC[i].ativo; saveRec(); renderRecorrentes(); }
-function delRec(i){ REC.splice(i,1); saveRec(); renderRecorrentes(); }
+function toggleRec(id){ const r=REC.find(r=>r.id===id); if(r) r.ativo=!r.ativo; saveRec(); renderRecorrentes(); }
+function delRec(id){ const idx=REC.findIndex(r=>r.id===id); if(idx>=0) REC.splice(idx,1); saveRec(); renderRecorrentes(); }
 
 function addRecorrente(){
   const desc=document.getElementById('rc-desc')?.value.trim();
